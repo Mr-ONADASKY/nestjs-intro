@@ -1,33 +1,60 @@
 import { Product } from './product.model';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { nanoid } from 'nanoid';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Document, Model, Types } from 'mongoose';
 
 @Injectable()
 export class ProductsService {
-  products: Product[] = [];
+  constructor(
+    @InjectModel('Product')
+    private readonly productModel: Model<Product & Document>,
+  ) {}
 
-  insertProduct(title: string, desc: string, price: number) {
-    const prodId = nanoid();
-    const newProduct = new Product(prodId, title, desc, price);
+  async insertProduct(title: string, desc: string, price: number) {
+    const newProduct = new this.productModel({
+      title,
+      description: desc,
+      price,
+    });
 
-    this.products.push(newProduct);
-    return prodId;
+    const result = await await newProduct.save();
+
+    return result.id;
   }
 
-  getProducts() {
-    return this.products.slice();
+  async getProducts() {
+    const products = await this.productModel.find().exec();
+
+    return products.map((prod) => ({
+      id: prod.id,
+      title: prod.title,
+      description: prod.description,
+    }));
   }
 
-  getProduct(productId: string) {
-    const product = this.findProduct(productId)[0];
+  async getSingleProduct(productId: string) {
+    const product = await this.findProduct(productId);
 
-    return { ...product };
+    return {
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+    };
   }
 
-  updateProduct(productId: string, title: string, desc: string, price: number) {
-    const [product, index] = this.findProduct(productId);
+  async updateProduct(
+    productId: string,
+    title: string,
+    desc: string,
+    price: number,
+  ) {
+    const updatedProduct = await this.findProduct(productId);
 
-    const updatedProduct = { ...product };
     if (title) {
       updatedProduct.title = title;
     }
@@ -40,25 +67,26 @@ export class ProductsService {
       updatedProduct.price = price;
     }
 
-    this.products[index] = updatedProduct;
+    await updatedProduct.save();
   }
 
-  private findProduct(productId: string): [Product, number] {
-    const index = this.products.findIndex(
-      (product) => product.id === productId,
-    );
-    const product = this.products[index];
-    if (!product) {
-      throw new NotFoundException();
+  private async findProduct(productId: string) {
+    if (!Types.ObjectId.isValid(productId)) {
+      throw new BadRequestException('Invalid objectId');
     }
 
-    return [product, index];
+    const product = await this.productModel.findById(productId);
+
+    if (!product) {
+      throw new NotFoundException('Could not find product');
+    }
+
+    return product;
   }
 
-  deleteProduct(productId: string) {
-    const [, index] = this.findProduct(productId);
-    this.products = this.products.splice(index);
+  async deleteProduct(productId: string) {
+    const product = await this.findProduct(productId);
 
-    return null;
+    await product.delete();
   }
 }
