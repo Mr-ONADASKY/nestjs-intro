@@ -4,16 +4,8 @@ import next from 'next';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = next({
-    dev: process.env.NODE_ENV !== 'production',
-  });
+ const server = await NestFactory.create(AppModule);
 
-  await app.prepare();
-
-  const server = await NestFactory.create(AppModule);
-
-  const renderer = server.get(RenderModule);
-  renderer.register(server, app);
   await server.listen(3000);
 }
 bootstrap();
