@@ -2,3 +2,4 @@
 .yalc
 node_modules
 dist
+.next

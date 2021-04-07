@@ -1,0 +1,8 @@
+node_modules
+src
+.vscode
+.git
+migrations
+tests
+coverage
+templates
