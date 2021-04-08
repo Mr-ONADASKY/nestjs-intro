@@ -1,4 +1,5 @@
 .git
-/src
+/client
+/server
 /test
 node_modules

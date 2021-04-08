@@ -1,9 +1,9 @@
-import { ViewModule } from './server/view/view.module';
+import { ViewModule } from './view/view.module';
 import { Module } from '@nestjs/common';
 
-import { AppController } from './server/app.controller';
-import { AppService } from './server/app.service';
-import { ApiModule } from './server/api/api.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ApiModule } from './api/api.module';
 
 @Module({
   imports: [
